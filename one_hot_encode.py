@@ -15,5 +15,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     genome = read_fasta(args.filename)
-    one_hot_genome = one_hot_encode(args.filename)
+    one_hot_genome = {k: one_hot_encode(v) for k, v in genome.items()}
     np.savez(Path(args.filename.parent, args.filename.stem + ".npz"), **one_hot_genome)
