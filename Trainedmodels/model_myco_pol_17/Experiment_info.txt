@@ -1,0 +1,47 @@
+{
+    "architecture": "bassenji_Etienne",
+    "genome": "shared_folder/SCerevisiae/genome/W303_Mmmyco.npz",
+    "labels": "shared_folder/SCerevisiae/data/GSE217022/labels_myco_pol_ratio.npz",
+    "output": "shared_folder/SCerevisiae/Trainedmodels/model_myco_pol_17/",
+    "chrom_train": [
+        "chrI",
+        "chrII",
+        "chrIII",
+        "chrIV",
+        "chrV",
+        "chrVI",
+        "chrVII",
+        "chrVIII",
+        "chrIX",
+        "chrX",
+        "chrXI",
+        "chrXII",
+        "chrXIII"
+    ],
+    "chrom_valid": [
+        "chrXIV",
+        "chrXV"
+    ],
+    "strand": "both",
+    "winsize": 2048,
+    "head_interval": 128,
+    "learn_rate": 0.001,
+    "epochs": 100,
+    "batch_size": 1024,
+    "same_samples": false,
+    "max_train": 262144,
+    "max_valid": 1048576,
+    "balance": "batch",
+    "n_classes": 500,
+    "remove0s": false,
+    "removeNs": true,
+    "remove_indices": "shared_folder/SCerevisiae/data/GSE217022/invalid_myco_pol_ratio.npz",
+    "seed": null,
+    "disable_autotune": false,
+    "patience": 6,
+    "distribute": true,
+    "verbose": 2
+}
+timestamp: 2023-07-04 17:53:55.965995
+machine: mnhn-alienware-2
+training time: 393.80685329437256

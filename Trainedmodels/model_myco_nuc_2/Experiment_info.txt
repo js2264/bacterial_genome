@@ -1,0 +1,44 @@
+{
+    "architecture": "mnase_Etienne",
+    "genome": "shared_folder/SCerevisiae/genome/W303_Mmmyco.npz",
+    "labels": "shared_folder/SCerevisiae/data/labels_myco_nuc.npz",
+    "output": "shared_folder/SCerevisiae/Trainedmodels/model_myco_nuc_2/",
+    "chrom_train": [
+        "chrI",
+        "chrII",
+        "chrIII",
+        "chrIV",
+        "chrV",
+        "chrVI",
+        "chrVII",
+        "chrVIII",
+        "chrIX",
+        "chrX",
+        "chrXI",
+        "chrXII",
+        "chrXIII"
+    ],
+    "chrom_valid": [
+        "chrXIV",
+        "chrXV"
+    ],
+    "strand": "both",
+    "winsize": 2001,
+    "head_interval": null,
+    "learn_rate": 0.001,
+    "epochs": 100,
+    "batch_size": 1024,
+    "same_samples": false,
+    "max_train": 262144,
+    "max_valid": 1048576,
+    "balance": "batch",
+    "remove0s": false,
+    "removeNs": false,
+    "disable_autotune": false,
+    "patience": 6,
+    "distribute": true,
+    "verbose": 2
+}
+timestamp: 2023-06-26 16:26:12.387643
+machine: mnhn-alienware-2
+training time: 1642.6445224285126
