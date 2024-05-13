@@ -1,6 +1,0 @@
-annotation_file:
-  './data/myco_coverage_pol2_log_cpm.bw'
-annotation_type:
-  'pol2'
-file_to_store_model:
-  './models/weights_myco_pol2_2048_16_3.hdf5'
