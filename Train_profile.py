@@ -28,24 +28,15 @@ def parsing():
     Arguments
     ---------
     python command-line
-
-    Returns
-    -------
-    dataset: Input dataset file with npz format
-    output: Path to the output directory and file name
-    read_length: Number of base pairs in input reads
-    learning_rate: Value for learning rate
-    epochs: Number of training loops over the dataset
-    batch_size: Number of samples to use for training in parallel
-    relabeled: if the dataset has been relabeled, this file contains the new
-        labels and weights for the dataset
     """
     # Declaration of expexted arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-arch",
         "--architecture",
-        help='Name of the model architecture in "models.py".',
+        help='Name of the model architecture in "models.py". '
+        'If you wish to use your own, you will need to add it to "models.py" '
+        'and also to the dictionary "model_dict" in this script.',
         type=str,
         required=True,
     )
@@ -67,7 +58,8 @@ def parsing():
     parser.add_argument(
         "-out",
         "--output",
-        help="Path to the output directory and file name.",
+        help="Path to the output directory. If it doesn't exist, it will be created. "
+        "However it should be empty otherwise files in it may be overwritten.",
         type=str,
         required=True,
     )
@@ -106,7 +98,7 @@ def parsing():
         "-h_int",
         "--head_interval",
         help="Spacing between output head in case of mutliple outputs, "
-        "default to None",
+        "default to None, for a single output in the middle of the window.",
         default=None,
         type=int,
     )
@@ -120,27 +112,29 @@ def parsing():
     parser.add_argument(
         "-ep",
         "--epochs",
-        help="Number of training loops over the dataset, default to 100",
+        help="Number of training loops over the entire sample data, default to 100",
         default=100,
         type=int,
     )
     parser.add_argument(
         "-b",
         "--batch_size",
-        help="Number of samples to use for training in parallel, default to " "1024",
+        help="Number of samples to use per training step, default to 1024",
         default=1024,
         type=int,
     )
     parser.add_argument(
         "-ss",
         "--same_samples",
-        help="Indicates to use the same sample at each epoch",
+        help="Indicates to use the same sample at each epoch. Otherwise, "
+        "change the sample by first fetching data that hasn't been used "
+        "in the previous epochs.",
         action="store_true",
     )
     parser.add_argument(
         "-mt",
         "--max_train",
-        help="Maximum number of windows per epoch for training, default to " "2*22",
+        help="Maximum number of windows per epoch for training, default to 2*22",
         default=2**22,
         type=int,
     )
@@ -154,26 +148,32 @@ def parsing():
     parser.add_argument(
         "-bal",
         "--balance",
-        help="'global' indicates to balance weights globally and 'batch' "
-        "indicates to balance weights in each batch. If not set, no weights "
+        help="'global' indicates to balance sample weights globally and 'batch' "
+        "indicates to balance sample weights in each batch. If not set, no weights "
         "are used. Default to None",
         default=None,
         type=str,
     )
     parser.add_argument(
-        "-nc", "--n_classes", help="Number of classes to divide", default=500, type=int
+        "-nc",
+        "--n_classes",
+        help="Number of bins to divide values into for sample weighting, default to 500",
+        default=500,
+        type=int,
     )
     parser.add_argument(
         "-r0",
         "--remove0s",
         action="store_true",
-        help="Indicates to remove 0 labels from training set",
+        help="Indicates to remove 0 labels from training set. "
+        "Recommended to avoid training on non-mappable regions",
     )
     parser.add_argument(
         "-rN",
         "--removeNs",
         action="store_true",
-        help="Indicates to remove windows with N from training set",
+        help="Indicates to remove windows with N from training set. In the one-hot "
+        "encoding format, this corresponds to a vector of all 0s",
     )
     parser.add_argument(
         "-r",
@@ -185,7 +185,8 @@ def parsing():
     )
     parser.add_argument(
         "--seed",
-        help="Seed to use for random shuffling of training samples",
+        help="Seed to use for random operations, which include model weights "
+        "initialization and training samples shuffling",
         default=None,
         type=int,
     )
@@ -198,8 +199,9 @@ def parsing():
     parser.add_argument(
         "-p",
         "--patience",
-        help="Number of epochs without improvement to wait before stopping "
-        "training, default to 10",
+        help="Patience parameter for earlystopping: number of epochs "
+        "without improvement on the validation set to wait before stopping "
+        "training, default to 6",
         default=6,
         type=int,
     )
@@ -207,12 +209,12 @@ def parsing():
         "-dist",
         "--distribute",
         action="store_true",
-        help="Indicates to use both GPUs with MirrorStrategy.",
+        help="Indicates to use multiple GPUs with MirrorStrategy.",
     )
     parser.add_argument(
         "-v",
         "--verbose",
-        help="0 for silent, 1 for progress bar and 2 for single line",
+        help="0 for silent, 1 for progress bar and 2 for single line. Default to 2.",
         default=2,
         type=int,
     )

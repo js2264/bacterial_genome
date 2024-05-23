@@ -116,12 +116,39 @@ def RC_one_hot(one_hot, order):
 def strided_sliding_window_view(
     x, window_shape, stride, sliding_len, axis=None, *, subok=False, writeable=False
 ):
-    """Variant of `strided_window_view` which slides in between strides.
+    """Return blocks of sliding windows, with starts seperated by a stride.
+
+    Variant of `sliding_window_view` from the numpy library, use with caution as it is not as robust.
 
     This will provide blocks of sliding window of `sliding_len` windows,
     with first windows spaced by `stride`
     The axis parameter determines where the stride and slide are performed, it
-    can only be a single value."""
+    can only be a single value.
+
+    Examples
+    --------
+    >>> strided_sliding_window_view(np.arange(10), 3, 4, 2)
+    array([[[0, 1, 2],
+            [1, 2, 3]],
+
+           [[4, 5, 6],
+            [5, 6, 7]]])
+    >>> strided_sliding_window_view(np.arange(10), 3, 2, 4)
+    array([[[0, 1, 2],
+            [1, 2, 3],
+            [2, 3, 4],
+            [3, 4, 5]],
+
+           [[2, 3, 4],
+            [3, 4, 5],
+            [4, 5, 6],
+            [5, 6, 7]],
+
+           [[4, 5, 6],
+            [5, 6, 7],
+            [6, 7, 8],
+            [7, 8, 9]]])
+    """
     window_shape = tuple(window_shape) if np.iterable(window_shape) else (window_shape,)
     # first convert input to array, possibly keeping subclass
     x = np.array(x, copy=False, subok=subok)
