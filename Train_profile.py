@@ -83,43 +83,43 @@ def parsing():
         "-s",
         "--strand",
         help="Strand to perform training on, choose between 'for', 'rev' or "
-        "'both'. Default to 'both.",
+        "'both' (default: %(default)s)",
         type=str,
         default="both",
     )
     parser.add_argument(
         "-w",
         "--winsize",
-        help="Size of the window in bp to use for prediction, default to 2001",
+        help="Size of the window in bp to use for prediction (default: %(default)s)",
         default=2001,
         type=int,
     )
     parser.add_argument(
         "-h_int",
         "--head_interval",
-        help="Spacing between output head in case of mutliple outputs, "
-        "default to None, for a single output in the middle of the window.",
+        help="Spacing between output head in case of mutliple outputs. "
+        "If not set, consider a single output in the middle of the window (default: %(default)s)",
         default=None,
         type=int,
     )
     parser.add_argument(
         "-lr",
         "--learn_rate",
-        help="Value for learning rate, default to 0.001",
+        help="Value for learning rate (default: %(default)s)",
         default=0.001,
         type=float,
     )
     parser.add_argument(
         "-ep",
         "--epochs",
-        help="Number of training loops over the entire sample data, default to 100",
+        help="Number of training loops over the entire sample data (default: %(default)s)",
         default=100,
         type=int,
     )
     parser.add_argument(
         "-b",
         "--batch_size",
-        help="Number of samples to use per training step, default to 1024",
+        help="Number of samples to use per training step (default: %(default)s)",
         default=1024,
         type=int,
     )
@@ -134,14 +134,14 @@ def parsing():
     parser.add_argument(
         "-mt",
         "--max_train",
-        help="Maximum number of windows per epoch for training, default to 2*22",
+        help="Maximum number of windows per epoch for training (default: %(default)s)",
         default=2**22,
         type=int,
     )
     parser.add_argument(
         "-mv",
         "--max_valid",
-        help="Maximum number of windows per epoch for validation, default to " "2*20",
+        help="Maximum number of windows per epoch for validation (default: %(default)s)",
         default=2**20,
         type=int,
     )
@@ -150,14 +150,14 @@ def parsing():
         "--balance",
         help="'global' indicates to balance sample weights globally and 'batch' "
         "indicates to balance sample weights in each batch. If not set, no weights "
-        "are used. Default to None",
+        "are used (default: %(default)s)",
         default=None,
         type=str,
     )
     parser.add_argument(
         "-nc",
         "--n_classes",
-        help="Number of bins to divide values into for sample weighting, default to 500",
+        help="Number of bins to divide values into for sample weighting (default: %(default)s)",
         default=500,
         type=int,
     )
@@ -201,7 +201,7 @@ def parsing():
         "--patience",
         help="Patience parameter for earlystopping: number of epochs "
         "without improvement on the validation set to wait before stopping "
-        "training, default to 6",
+        "training (default: %(default)s)",
         default=6,
         type=int,
     )
@@ -214,7 +214,7 @@ def parsing():
     parser.add_argument(
         "-v",
         "--verbose",
-        help="0 for silent, 1 for progress bar and 2 for single line. Default to 2.",
+        help="0 for silent, 1 for progress bar and 2 for single line (default: %(default)s)",
         default=2,
         type=int,
     )

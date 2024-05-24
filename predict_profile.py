@@ -30,7 +30,8 @@ def parsing():
     parser.add_argument(
         "-m",
         "--trained_model",
-        help="trained model file, or model weights file.",
+        help="trained model file, or model weights file. Must be in a format "
+        "accepted by tf.keras.models.load_model",
         type=Path,
         required=True,
     )
@@ -45,7 +46,8 @@ def parsing():
     parser.add_argument(
         "-o",
         "--output",
-        help="output directory to write predictions in.",
+        help="Path to the output directory. If it doesn't exist, it will be created. "
+        "However it should be empty otherwise files in it may be overwritten.",
         type=Path,
         required=True,
     )
@@ -53,7 +55,7 @@ def parsing():
         "-c",
         "--chromosomes",
         help="chromosomes to predict on. Specify 'all' if you wish to predict "
-        "on all chromosomes",
+        "on all chromosomes (default: %(default)s)",
         nargs="+",
         default=["all"],
         type=str,
@@ -62,7 +64,7 @@ def parsing():
         "-s",
         "--strand",
         help="strand to predict on, choose between 'for', 'rev' or "
-        "'both'. Default to 'both.",
+        "'both' (default: %(default)s)",
         type=str,
         default="both",
     )
@@ -76,8 +78,8 @@ def parsing():
     parser.add_argument(
         "-h_int",
         "--head_interval",
-        help="Spacing between output head in case of mutliple outputs, "
-        "default to None",
+        help="Spacing between output heads in case of mutliple outputs, "
+        "(default: %(default)s)",
         default=None,
         type=int,
     )
@@ -91,7 +93,7 @@ def parsing():
     parser.add_argument(
         "-b",
         "--batch_size",
-        help="Number of samples to use for predicting in parallel, default to " "1024",
+        help="Number of samples to use for predicting in parallel (default: %(default)s)",
         default=1024,
         type=int,
     )
