@@ -324,6 +324,7 @@ if __name__ == "__main__":
     else:
         remove_indices_train = None
         remove_indices_valid = None
+    # Build generators
     generator_train = tf_utils.WindowGenerator(
         data=x_train,
         labels=y_train,

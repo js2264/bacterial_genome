@@ -1,13 +1,28 @@
 #!/usr/bin/env python
 
-from typing import Iterable
+from pathlib import Path
+from typing import Dict, Iterable, Union
 
 import numpy as np
 import pyBigWig
 from numpy.lib.stride_tricks import as_strided
 
 
-def load_bw(filename, nantonum=True):
+def load_bw(filename: Union[Path, str], nantonum: bool = True) -> Dict[str, np.ndarray]:
+    """Load labels from a bigwig file.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Name of the file to load
+    nantonum : bool, optional
+        If True, replace NaN with zero and infinity with large finite numbers.
+
+    Returns
+    -------
+    labels : dict
+        Dictionary of labels by chromosome
+    """
     labels = {}
     with pyBigWig.open(str(filename)) as bw:
         for chr_id in bw.chroms():
@@ -18,22 +33,31 @@ def load_bw(filename, nantonum=True):
     return labels
 
 
-def write_bw(filename, signals):
+def write_bw(filename: Union[Path, str], arrays: Dict[str, np.ndarray]) -> None:
+    """Write arrays into a bigwig file.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Name of the file to load
+    arrays : dict
+        Dictionary of arrays by chromosome
+    """
     bw = pyBigWig.open(str(filename), "w")
-    bw.addHeader([(k, len(v)) for k, v in signals.items()])
-    for chr_id, val in signals.items():
+    bw.addHeader([(k, len(v)) for k, v in arrays.items()])
+    for chr_id, val in arrays.items():
         bw.addEntries(chr_id, 0, values=val, span=1, step=1)
     bw.close()
 
 
-def merge_chroms(chr_ids: Iterable[str], file: str):
+def merge_chroms(chr_ids: Iterable[str], file: str) -> np.ndarray:
     """Concatenate chromosomes by interspacing them with a value of 0.
 
     Parameters
     ----------
-    chr_ids: iterable of str
+    chr_ids : iterable of str
         Names of the chromosomes to concatenate, names must match keys in `file`
-    file: str
+    file : str
         Name of an npz file containing one-hot encoded chromosomes.
         The length of the chromosome must be the first dimension.
 
@@ -51,8 +75,19 @@ def merge_chroms(chr_ids: Iterable[str], file: str):
     return np.concatenate(annot)
 
 
-def read_fasta(file):
-    """Parse a fasta file as a dictionary."""
+def read_fasta(file: str) -> Dict[str, str]:
+    """Parse a fasta file as a dictionary.
+
+    Parameters
+    ----------
+    file : str
+        Name of the fasta file to read
+
+    Returns
+    -------
+    genome : dict
+        Dictionary of sequences by chromosome
+    """
     with open(file) as f:
         genome = {}
         seq, seqname = "", ""
@@ -69,7 +104,30 @@ def read_fasta(file):
     return genome
 
 
-def one_hot_encode(seq, length=None, one_hot_type=bool, order="ACGT"):
+def one_hot_encode(
+    seq: str, length: int = None, one_hot_type: type = bool, order: str = "ACGT"
+) -> np.ndarray:
+    """Applies one-hot encoding to a DNA sequence.
+
+    Parameters
+    ----------
+    seq : str
+        DNA sequence to encode
+    length : int, optional
+        Length to coerce the sequence to. Longer sequences will be truncated,
+        while shorter sequences will be filled with N bases
+    one_hot_type : type, optional
+        Type of the values in the one-hot encoding
+    order : str, optional
+        Order of bases to use for one-hot encoding
+
+    Returns
+    -------
+    one_hot : ndarray, shape=(length, 4)
+        2D-array with every letter from `seq` replaced by a vector
+        containing a 1 in the position corresponding to that letter, and 0
+        elsewhere. Ns are replaced by all 0s.
+    """
     if length is None:
         length = len(seq)
     one_hot = np.zeros((length, 4), dtype=one_hot_type)
@@ -87,14 +145,14 @@ def one_hot_encode(seq, length=None, one_hot_type=bool, order="ACGT"):
     return one_hot
 
 
-def RC_one_hot(one_hot, order):
+def RC_one_hot(one_hot: np.ndarray, order: str = "ACGT") -> np.ndarray:
     """Compute reverse complement of one_hot array.
 
     Parameters
     ----------
     one_hot : ndarray, shape=(n, 4)
         Array of one-hot encoded DNA, with one_hot values along last axis
-    order : str, default='ACGT'
+    order : str, optional
         String representation of the order in which to encode bases. Default
         value of 'ACGT' means that A has the representation with 1 in first
         position, C with 1 in second position, etc...
@@ -114,16 +172,51 @@ def RC_one_hot(one_hot, order):
 
 
 def strided_sliding_window_view(
-    x, window_shape, stride, sliding_len, axis=None, *, subok=False, writeable=False
+    x: np.ndarray,
+    window_shape: int,
+    stride: int,
+    sliding_len: int,
+    axis: int = None,
+    *,
+    subok: bool = False,
+    writeable: bool = False,
 ):
-    """Return blocks of sliding windows, with starts seperated by a stride.
+    """Create a view of blocks of sliding windows, with starts seperated by a stride.
 
     Variant of `sliding_window_view` from the numpy library, use with caution as it is not as robust.
 
     This will provide blocks of sliding window of `sliding_len` windows,
-    with first windows spaced by `stride`
-    The axis parameter determines where the stride and slide are performed, it
-    can only be a single value.
+    with first windows spaced by `stride`. If `sliding_len` is larger than `stride`,
+    the next block will overlap the previous one.
+    The axis parameter determines where the stride and slide are performed.
+    Unlike in `sliding_window_view`, it can only be a single value.
+
+    Parameters
+    ----------
+    x : ndarray
+        Input array
+    window_shape : int
+        Size of windows to extract.
+    stride : int
+        Spacing between starting windows of each block.
+    sliding_len : int
+        Number of consecutive windows to take in a block.
+    axis : int, optional
+        Axis along which to perform the stride and slide.
+    subok : bool, optional
+        If True, sub-classes will be passed-through, otherwise the returned array
+        will be forced to be a base-class array (default).
+    writeable : bool, optional
+        When true, allow writing to the returned view. The default is false,
+        as this should be used with caution: the returned view contains the same memory
+        location multiple times, so writing to one location will cause others to change.
+
+
+
+    Returns
+    -------
+    ndarray
+        Resulting strided sliding window view of the array.
 
     Examples
     --------

@@ -380,20 +380,69 @@ def predict(
     extradims=None,
     order="ACGT",
 ):
+    """Make neural network predictions on DNA sequence
+
+    Parameters
+    ----------
+    model : tf.keras.Model
+        Neural network to use for predicting
+    one_hot_chr : ndarray, shape=(n, 4)
+        2D one-hot encoded DNA sequence
+    winsize : int
+        Size of input window for the model
+    head_interval : int, optional
+        Spacing between output heads, specify None in case of single ouput
+    reverse : bool, optional
+        If True, make predictions on reverse complement
+    batch_size : int, optional
+        Number of windows to predict on in parallel
+    middle : bool, optional
+        If True, and head_interval is not None, only central head will be used for prediciton.
+    extradims : int, optional
+        Extra dimensions with size 1 to add to one_hot_chr. Only supported if head_interval is None
+    order : str, optional
+        Order of one-hot encoding. Important if reverse is True
+
+    Returns
+    -------
+    pred : ndarray, shape(n,)
+        Prediction array of same length as `one_hot_chr`
+    """
     if winsize > len(one_hot_chr):
         raise ValueError("sequence too small")
+    # Maybe reverse complement the sequence
     if reverse:
         if order == "ACGT":
             one_hot_chr = one_hot_chr[::-1, ::-1]
         else:
             one_hot_chr = utils.RC_one_hot(one_hot_chr, order)
+    # Initilialize prediction array
     pred = np.zeros(len(one_hot_chr), dtype="float32")
+    # Use appropriate prediction method
     if head_interval is not None and middle:
+        # Multiple outputs, and using only ones in central half
+        # Create strided slides to predict on every positions
+        # XXXX... : individual windows        | : prediction head
+        #    |  |
+        # XXXXXXXXXXXX
+        #     |  |
+        #  XXXXXXXXXXXX
+        #      |  |
+        #   XXXXXXXXXXXX
+        #          |  |
+        #       XXXXXXXXXXXX
+        #           |  |
+        #        XXXXXXXXXXXX
+        #            |  |
+        #         XXXXXXXXXXXX
+        #                ...
         X = utils.strided_sliding_window_view(
             one_hot_chr, (winsize, 4), stride=winsize // 2, sliding_len=head_interval
         ).reshape(-1, winsize, 4)
+        # Predict on all windows and keep only central heads
         n_heads = winsize // head_interval
         y = model.predict(X).squeeze()[:, n_heads // 4 : 3 * n_heads // 4]
+        # Reorder predictions to be consecutive and fill prediction array
         y = np.transpose(y.reshape(-1, head_interval, n_heads // 2), [0, 2, 1]).ravel()
         pred[winsize // 4 : len(y) + winsize // 4] = y
         # Get last window
@@ -409,11 +458,29 @@ def predict(
             y = model.predict(X).squeeze().T.ravel()
             pred[-leftover:-min_leftover] = y[-leftover + min_leftover :]
     elif head_interval is not None:
+        # Multiple outputs, using all of them
+        # Create strided slides to predict on every positions
+        # XXXX... : individual windows        | : prediction head
+        # |  |  |  |
+        # XXXXXXXXXXXX
+        #  |  |  |  |
+        #  XXXXXXXXXXXX
+        #   |  |  |  |
+        #   XXXXXXXXXXXX
+        #             |  |  |  |
+        #             XXXXXXXXXXXX
+        #              |  |  |  |
+        #              XXXXXXXXXXXX
+        #               |  |  |  |
+        #               XXXXXXXXXXXX
+        #                         ...
         X = utils.strided_sliding_window_view(
             one_hot_chr, (winsize, 4), stride=winsize, sliding_len=head_interval
         ).reshape(-1, winsize, 4)
+        # Predict on all windows
         y = model.predict(X).squeeze()
         n_heads = y.shape[-1]
+        # Reorder predictions to be consecutive and fill prediction array
         y = np.transpose(y.reshape(-1, head_interval, n_heads), [0, 2, 1]).ravel()
         pred[: len(y)] = y
         # Get last_window
@@ -428,6 +495,8 @@ def predict(
             y = model.predict(X).squeeze().T.ravel()
             pred[-leftover : -head_interval + 1] = y[-leftover + head_interval - 1 :]
     else:
+        # Single output
+        # Generate all windows, and predict on them
         X = PredGenerator(one_hot_chr, winsize, batch_size, extradims)
         pred[winsize // 2 : -(winsize // 2)] = model.predict(X).ravel()
     if reverse:

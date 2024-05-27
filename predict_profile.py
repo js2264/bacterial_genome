@@ -140,7 +140,7 @@ if __name__ == "__main__":
         else:
             chromosomes = args.chromosomes
         for chr_id in chromosomes:
-            # Load genomic data and maybe labels (labels aren't currently used)
+            # Load chromosome one-hot encoded sequence
             try:
                 one_hot_chr = genome[chr_id]
             except KeyError:
@@ -151,6 +151,7 @@ if __name__ == "__main__":
                     )
                 )
                 continue
+            # Predict on specified strands
             if args.strand in ["for", "both"]:
                 all_preds[chr_id] = tf_utils.predict(
                     model,
@@ -170,6 +171,7 @@ if __name__ == "__main__":
                     middle=args.middle,
                     reverse=True,
                 )
+    # Save predicitons
     if args.middle:
         output_file = Path(args.output, f"preds_mid_on_{args.genome.name}")
     else:
