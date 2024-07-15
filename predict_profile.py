@@ -151,6 +151,14 @@ if __name__ == "__main__":
                     )
                 )
                 continue
+            if len(one_hot_chr) < winsize:
+                warnings.warn(
+                    Warning(
+                        f"{chr_id} of length {len(one_hot_chr)} is too short "
+                        "for prediction, skipping..."
+                    )
+                )
+                continue
             # Predict on specified strands
             if args.strand in ["for", "both"]:
                 all_preds[chr_id] = tf_utils.predict(
